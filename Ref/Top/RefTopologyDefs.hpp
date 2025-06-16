@@ -16,9 +16,16 @@
 #include "Ref/Top/FppConstantsAc.hpp"
 #include "Svc/Health/Health.hpp"
 
-// Subtopology PingEntries includes 
+
 #include "Svc/Subtopologies/CDHCore/PingEntries.hpp"
 
+namespace PingEntries {
+    namespace Ref_blockDrv       {enum { WARN = 3, FATAL = 5 };}
+    namespace Ref_pingRcvr       {enum { WARN = 3, FATAL = 5 };}
+    namespace Ref_rateGroup1Comp {enum { WARN = 3, FATAL = 5 };}
+    namespace Ref_rateGroup2Comp {enum { WARN = 3, FATAL = 5 };}
+    namespace Ref_rateGroup3Comp {enum { WARN = 3, FATAL = 5 };}
+}  // namespace PingEntries
 /**
  * \brief required ping constants
  *
@@ -38,6 +45,7 @@
  * }
  * ```
  */
+
 namespace PingEntries {
     namespace Ref_blockDrv {enum { WARN = 3, FATAL = 5 };}
     namespace Ref_cmdSeq {enum { WARN = 3, FATAL = 5 };}
@@ -52,8 +60,10 @@ namespace PingEntries {
     namespace Ref_dpCat {enum { WARN = 3, FATAL = 5 };}
 }  // namespace PingEntries
 
+
 // Definitions are placed within a namespace named after the deployment
 namespace Ref {
+
 
     /**
      * \brief required type definition to carry state
@@ -69,5 +79,23 @@ namespace Ref {
     };
 
     namespace PingEntries = ::PingEntries;
+
+/**
+ * \brief required type definition to carry state
+ *
+ * The topology autocoder requires an object that carries state with the name `Ref::TopologyState`. Only the type
+ * definition is required by the autocoder and the contents of this object are otherwise opaque to the autocoder. The
+ * contents are entirely up to the definition of the project. This reference application specifies hostname and port
+ * fields, which are derived by command line inputs.
+ */
+struct TopologyState {
+    const char* hostname;
+    U16 port;
+};
+
+namespace PingEntries = ::PingEntries;
+
+
 }  // namespace Ref
+
 #endif

@@ -96,6 +96,7 @@ def test_send_command_args(fprime_test_api):
             fprime_test_api.get_event_pred(
                 "CDHCore.cmdDisp.NoOpStringReceived", [value]
             )
+
         ]
         fprime_test_api.send_and_assert_command(
             "CDHCore.cmdDisp.CMD_NO_OP_STRING",
@@ -285,5 +286,5 @@ def test_seqgen(fprime_test_api):
         == 0
     ), "Failed to run fprime-seqgen"
     fprime_test_api.send_and_assert_command(
-        "Ref.cmdSeq.CS_RUN", args=["/tmp/ref_test_int.bin", "BLOCK"], max_delay=5
+        "Comms.cmdSeq.CS_RUN", args=["/tmp/ref_test_int.bin", "BLOCK"], max_delay=5
     )

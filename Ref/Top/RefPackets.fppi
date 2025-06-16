@@ -5,20 +5,20 @@ telemetry packets RefPackets {
     Ref.rateGroup1Comp.RgMaxTime
     Ref.rateGroup2Comp.RgMaxTime
     Ref.rateGroup3Comp.RgMaxTime
-    Ref.cmdSeq.CS_LoadCommands
-    Ref.cmdSeq.CS_CancelCommands
-    Ref.cmdSeq.CS_CommandsExecuted
-    Ref.cmdSeq.CS_SequencesCompleted
+    Comms.cmdSeq.CS_LoadCommands
+    Comms.cmdSeq.CS_CancelCommands
+    Comms.cmdSeq.CS_CommandsExecuted
+    Comms.cmdSeq.CS_SequencesCompleted
     Ref.fileUplink.FilesReceived
     Ref.fileUplink.PacketsReceived
-    Ref.commsBufferManager.TotalBuffs
-    Ref.commsBufferManager.CurrBuffs
-    Ref.commsBufferManager.HiBuffs
+    Comms.commsBufferManager.TotalBuffs
+    Comms.commsBufferManager.CurrBuffs
+    Comms.commsBufferManager.HiBuffs
     Ref.fileDownlink.FilesSent
     Ref.fileDownlink.PacketsSent
     Ref.fileManager.CommandsExecuted
-    Ref.comQueue.comQueueDepth
-    Ref.comQueue.buffQueueDepth
+    Comms.comQueue.comQueueDepth
+    Comms.comQueue.buffQueueDepth
     #CDHCore.tlmSend.SendLevel
   }
 
@@ -26,13 +26,13 @@ telemetry packets RefPackets {
     Ref.rateGroup1Comp.RgCycleSlips
     Ref.rateGroup2Comp.RgCycleSlips
     Ref.rateGroup3Comp.RgCycleSlips
-    Ref.cmdSeq.CS_Errors
+    Comms.cmdSeq.CS_Errors
     Ref.fileUplink.Warnings
     Ref.fileDownlink.Warnings
     CDHCore.$health.PingLateWarnings
     Ref.fileManager.Errors
-    Ref.commsBufferManager.NoBuffs
-    Ref.commsBufferManager.EmptyBuffs
+    Comms.commsBufferManager.NoBuffs
+    Comms.commsBufferManager.EmptyBuffs
     Ref.fileManager.Errors
   }
 

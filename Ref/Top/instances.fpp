@@ -139,7 +139,16 @@ module Ref {
 
   instance spacePacketFramer: Svc.CCSDS.SpacePacketFramer base id 0x4C00
 
-  instance fprimeRouter: Svc.FprimeRouter base id 0x4D00
+
+  instance tmFramer: Svc.CCSDS.TmFramer base id 0x4B00
+
+
+  instance spacePacketDeframer: Svc.CCSDS.SpacePacketDeframer base id 0x4D00
+
+  instance apidManager: Svc.CCSDS.ApidManager base id 0x4E00
+
+  instance tmFramer: Svc.CCSDS.TmFramer base id 0x4E00
+
 
   instance apidManager: Svc.CCSDS.ApidManager base id 0x4E00
 

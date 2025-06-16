@@ -24,6 +24,8 @@ module Ref {
     # Subtopology imports
     # ----------------------------------------------------------------------
     import CDHCore.Subtopology
+    import CommsCCSDS.Subtopology
+
 
     # ----------------------------------------------------------------------
     # Instances used in the topology
@@ -166,8 +168,11 @@ module Ref {
     }
 
     connections Sequencer {
-      cmdSeq.comCmdOut -> CDHCore.cmdDisp.seqCmdBuff
-      CDHCore.cmdDisp.seqCmdStatus -> cmdSeq.cmdResponseIn
+      CommsCCSDS.cmdSeq.comCmdOut -> CDHCore.cmdDisp.seqCmdBuff
+      CDHCore.cmdDisp.seqCmdStatus -> CommsCCSDS.cmdSeq.cmdResponseIn
+      cmdSeq.comCmdOut -> cmdDisp.seqCmdBuff
+      cmdDisp.seqCmdStatus -> cmdSeq.cmdResponseIn
+
     }
 
     connections Uplink {
@@ -226,6 +231,20 @@ module Ref {
         CDHCore.events.FatalAnnounce -> fatalHandler.FatalReceive
     }
 
+
+    connections Comms_Dataproducts{
+
+      # Data Products
+      dpCat.fileOut             -> fileDownlink.SendFile
+      fileDownlink.FileComplete -> dpCat.fileDone
+      # Inputs to ComQueue (events, telemetry, file)
+      eventLogger.PktSend        -> comQueue.comPacketQueueIn[Ports_ComPacketQueue.EVENTS]
+      tlmSend.PktSend            -> comQueue.comPacketQueueIn[Ports_ComPacketQueue.TELEMETRY]
+      fileDownlink.bufferSendOut -> comQueue.bufferQueueIn[Ports_ComBufferQueue.FILE_DOWNLINK]
+      comQueue.bufferReturnOut[Ports_ComBufferQueue.FILE_DOWNLINK] -> fileDownlink.bufferReturn
+
+    }
+      
   }
 
 }
