@@ -12,6 +12,7 @@ from fprime_gds.executables.cli import ParserBase, StandardPipelineParser
 from fprime_gds.common.handlers import DataHandler
 from fprime_gds.common.pipeline.standard import StandardPipeline
 from fprime_gds.common.utils.config_manager import ConfigManager
+from fprime_gds.common.models.serialize.numerical_types import U16Type
 
 class SoakAnalysisResults:
     """Container for soak test analysis results"""
@@ -222,8 +223,11 @@ def pipeline_factory(args_ns, config) -> StandardPipeline:
 def main():
     args, _ = ParserBase.parse_args([StandardPipelineParser, SoakMonitorArgumentParser])
     config = ConfigManager()
-    config.set('framing', 'use_key', 'False')
-    config.set('types', 'msg_len', 'U16')
+    # Configure the distributor to parse Svc.ComLogger .com records.
+    # ComLogger stores each Fw::ComBuffer with no key and a U16 length prefix
+    # (see Svc/ComLogger/ComLogger.cpp), so override the GDS defaults accordingly.
+    config.set_config('use_key', False)
+    config.set_config('msg_len', U16Type)
     pipeline = pipeline_factory(args, config)
     
     # Initialize results container
