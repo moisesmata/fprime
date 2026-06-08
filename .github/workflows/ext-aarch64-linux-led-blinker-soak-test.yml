@@ -39,7 +39,7 @@ jobs:
           # Run the soak monitor
           cd ${INSTALL_DIR}/monitoring
           python3 soak_monitor.py \
-            --dictionary ${INSTALL_DIR}/dict/LedBlinkerTopologyDictionary.json \
+            --dictionary ${INSTALL_DIR}/dict/LedBlinkerDeploymentTopologyDictionary.json \
             --com-logs ${INSTALL_DIR}/ComLoggerFiles \
 
           
@@ -86,6 +86,6 @@ jobs:
           
           # Run the integration test 
           echo "Running integration tests..."
-          pytest --dictionary ${INSTALL_DIR}/dict/LedBlinkerTopologyDictionary.json ${INSTALL_DIR}/test/led_integration_tests.py
+          pytest --dictionary ${INSTALL_DIR}/dict/LedBlinkerDeploymentTopologyDictionary.json ${INSTALL_DIR}/test/led_integration_tests.py
           
           echo "=== Integration test completed at $(date) (${TEST_TIMESTAMP}) ==="
