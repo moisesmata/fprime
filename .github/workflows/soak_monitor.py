@@ -197,19 +197,25 @@ class SoakMonitorArgumentParser(ParserBase):
 
 def pipeline_factory(args_ns, config) -> StandardPipeline:
         """A factory of the standard pipeline given the handled arguments"""
+        # NOTE (fprime_gds 4.x): StandardPipeline.setup() now takes "dictionaries"
+        # (a loaded Dictionaries object, available as args_ns.dictionaries) instead of
+        # a "dictionary" path, and no longer accepts packet_spec/packet_set_name.
         pipeline_arguments = {
             "config": config,
-            "dictionary": args_ns.dictionary,
+            "dictionaries": args_ns.dictionaries,
             "file_store": args_ns.files_storage_directory,
-            "packet_spec": args_ns.packet_spec,
-            "packet_set_name": args_ns.packet_set_name,
             "logging_prefix": args_ns.logs,
+            # We feed ComLogger data in manually, so disable GDS data logging.
+            "data_logging_enabled": False,
         }
         pipeline = StandardPipeline()
         pipeline.transport_implementation = args_ns.connection_transport
         try:
             pipeline.setup(**pipeline_arguments)
-            #Call disconnect to turn off the receiving thread, we are feeding the data manually here
+            # Tear down the transport/file-uplink background threads started by setup().
+            # We never connect; ComLogger data is fed in manually via
+            # pipeline.distributor.on_recv() (synchronous), and disconnecting here lets
+            # the process exit cleanly once analysis completes.
             pipeline.disconnect()
         except Exception:
             # In all error cases, pipeline should be shutdown before continuing with exception handling
