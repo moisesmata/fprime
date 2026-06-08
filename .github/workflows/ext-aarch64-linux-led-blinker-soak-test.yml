@@ -1,0 +1,91 @@
+# Scheduled testing of LED blinker system service every 30 minutes
+# Analyzes ComLogger logs and runs integration tests
+#
+# This workflow analyzes ComLogger logs: Binary .com files from ComLogger component
+# and runs integration tests
+#
+# Note: The "Artifact not found: ledblinker-monitoring-state" error is expected on the first run
+# and is handled with continue-on-error: true
+#
+name: "Soak Test AArch64 Linux: External Repo LedBlinker"
+
+on:
+  #schedule:
+    # Run every 30 minutes
+    #- cron: '*/15 * * * *'
+  # Allow manual triggering for testing
+  workflow_dispatch:
+
+env:
+  FSW_SERVICE_NAME: ledblinker-soak-fsw
+  GDS_SERVICE_NAME: ledblinker-soak-gds
+  INSTALL_DIR: /opt/ledblinker-soak
+
+jobs:
+  soak-monitoring:
+    name: "Soak Log Analysis"
+    runs-on: [self-hosted, ARM64]
+    steps:
+      
+      - name: "Run soak monitoring"
+        run: |
+          # Use the virtual environment created during setup
+          . ${INSTALL_DIR}/venv/bin/activate
+          
+          TEST_TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          
+          echo "=== Soak monitoring started at $(date) (${TEST_TIMESTAMP}) ==="
+
+          # Run the soak monitor
+          cd ${INSTALL_DIR}/monitoring
+          python3 soak_monitor.py \
+            --dictionary ${INSTALL_DIR}/dict/LedBlinkerTopologyDictionary.json \
+            --com-logs ${INSTALL_DIR}/ComLoggerFiles \
+
+          
+
+  integration-test:
+    name: "Integration Test"
+    runs-on: [self-hosted, ARM64]
+    needs: soak-monitoring
+    steps:
+      
+      - name: "Check service status"
+        run: |
+          echo "=== CHECKING SERVICES FOR INTEGRATION TEST ==="
+          echo "Checking if ${FSW_SERVICE_NAME} service is running..."
+          if sudo systemctl is-active --quiet ${FSW_SERVICE_NAME}; then
+            echo "✅ Service ${FSW_SERVICE_NAME} is running"
+          else
+            echo "❌ Service ${FSW_SERVICE_NAME} is not running"
+            sudo systemctl status ${FSW_SERVICE_NAME} --no-pager -l
+            echo "Recent FSW service logs:"
+            sudo journalctl -u ${FSW_SERVICE_NAME} --no-pager -n 20
+            exit 1
+          fi
+          
+          echo "Checking if ${GDS_SERVICE_NAME} service is running..."
+          if sudo systemctl is-active --quiet ${GDS_SERVICE_NAME}; then
+            echo "✅ Service ${GDS_SERVICE_NAME} is running"
+          else
+            echo "❌ Service ${GDS_SERVICE_NAME} is not running"
+            sudo systemctl status ${GDS_SERVICE_NAME} --no-pager -l
+            echo "Recent GDS service logs:"
+            sudo journalctl -u ${GDS_SERVICE_NAME} --no-pager -n 20
+            exit 1
+          fi
+
+      - name: "Run integration tests"
+        run: |
+          # Use the virtual environment created during setup
+          . ${INSTALL_DIR}/venv/bin/activate
+          
+          TEST_TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+          
+          echo "=== Integration test started at $(date) (${TEST_TIMESTAMP}) ==="
+          
+          # Run the integration test 
+          echo "Running integration tests..."
+          pytest --dictionary ${INSTALL_DIR}/dict/LedBlinkerTopologyDictionary.json ${INSTALL_DIR}/test/led_integration_tests.py
+          
+          echo "=== Integration test completed at $(date) (${TEST_TIMESTAMP}) ==="
