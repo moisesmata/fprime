@@ -71,6 +71,12 @@ jobs:
           if [ -f "./lib/fprime/.github/workflows/soak_monitor.py" ]; then
             cp ./lib/fprime/.github/workflows/soak_monitor.py aarch64-linux-artifacts-soak/soak_monitor.py
           fi
+          # Copy pytest conftest (adds GDS subscription settle delay) next to the
+          # integration tests so it is installed into the test directory and
+          # discovered by pytest at runtime.
+          if [ -f "./lib/fprime/.github/workflows/conftest.py" ]; then
+            cp ./lib/fprime/.github/workflows/conftest.py aarch64-linux-artifacts-soak/int/conftest.py
+          fi
       - name: 'Archive Build Artifacts'
         uses: actions/upload-artifact@v4
         with:
