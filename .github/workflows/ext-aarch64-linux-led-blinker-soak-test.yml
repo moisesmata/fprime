@@ -18,7 +18,6 @@ on:
 
 env:
   FSW_SERVICE_NAME: ledblinker-soak-fsw
-  GDS_SERVICE_NAME: ledblinker-soak-gds
   INSTALL_DIR: /opt/ledblinker-soak
 
 jobs:
@@ -52,7 +51,7 @@ jobs:
       
       - name: "Check service status"
         run: |
-          echo "=== CHECKING SERVICES FOR INTEGRATION TEST ==="
+          echo "=== CHECKING SERVICE FOR INTEGRATION TEST ==="
           echo "Checking if ${FSW_SERVICE_NAME} service is running..."
           if sudo systemctl is-active --quiet ${FSW_SERVICE_NAME}; then
             echo "✅ Service ${FSW_SERVICE_NAME} is running"
@@ -63,29 +62,30 @@ jobs:
             sudo journalctl -u ${FSW_SERVICE_NAME} --no-pager -n 20
             exit 1
           fi
-          
-          echo "Checking if ${GDS_SERVICE_NAME} service is running..."
-          if sudo systemctl is-active --quiet ${GDS_SERVICE_NAME}; then
-            echo "✅ Service ${GDS_SERVICE_NAME} is running"
-          else
-            echo "❌ Service ${GDS_SERVICE_NAME} is not running"
-            sudo systemctl status ${GDS_SERVICE_NAME} --no-pager -l
-            echo "Recent GDS service logs:"
-            sudo journalctl -u ${GDS_SERVICE_NAME} --no-pager -n 20
-            exit 1
-          fi
 
       - name: "Run integration tests"
         run: |
           # Use the virtual environment created during setup
           . ${INSTALL_DIR}/venv/bin/activate
-          
+
           TEST_TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-          
           echo "=== Integration test started at $(date) (${TEST_TIMESTAMP}) ==="
-          
-          # Run the integration test 
+
+          # Launch a GDS client against the long-running FSW service, then run pytest.
+          # This mirrors ext-aarch64-linux-led-blinker.yml (start GDS, wait, run pytest).
+          # The FSW already runs as a service, so we pass -n so the GDS does not launch
+          # its own app, and -g none to stay headless.
+          mkdir -p ${INSTALL_DIR}/ci-logs
+          fprime-gds --ip-client --ip-address 127.0.0.1 --ip-port 50000 -n -g none \
+            -d ${INSTALL_DIR} --logs ${INSTALL_DIR}/ci-logs \
+            --framing-selection space-packet-space-data-link &
+          GDS_PID=$!
+          # Ensure the GDS client is torn down so it releases the FSW's single client
+          # slot for the next scheduled run.
+          trap "kill ${GDS_PID} 2>/dev/null || true" EXIT
+          sleep 10
+
           echo "Running integration tests..."
           pytest --dictionary ${INSTALL_DIR}/dict/LedBlinkerDeploymentTopologyDictionary.json ${INSTALL_DIR}/test/led_integration_tests.py
-          
+
           echo "=== Integration test completed at $(date) (${TEST_TIMESTAMP}) ==="
