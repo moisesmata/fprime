@@ -75,6 +75,12 @@ jobs:
           if [ -f "./lib/fprime/.github/workflows/ledblinker-soak-fsw.service" ]; then
             cp ./lib/fprime/.github/workflows/ledblinker-soak-fsw.service aarch64-linux-artifacts-soak/ledblinker-soak-fsw.service
           fi
+          # Copy pytest conftest (waits for the GDS subscription to go live before
+          # tests send commands) next to the integration tests so it is installed
+          # into the test directory and auto-discovered by pytest at runtime.
+          if [ -f "./lib/fprime/.github/workflows/conftest.py" ]; then
+            cp ./lib/fprime/.github/workflows/conftest.py aarch64-linux-artifacts-soak/int/conftest.py
+          fi
       - name: 'Archive Build Artifacts'
         uses: actions/upload-artifact@v4
         with:
