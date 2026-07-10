@@ -63,13 +63,15 @@ void FileWorkerTester ::testReadErr() {
 
     this->clearHistory();
     fTest.setRead(Os::FileInterface::INVALID_MODE);
-    this->component.readFile(buf, size, f, fnameChar);
+    rStat = this->component.readFile(buf, size, f, fnameChar);
+    ASSERT_EQ(FileWorkerReadStatus::FW_READ_ERROR, rStat);
     ASSERT_EVENTS_ReadError_SIZE(1);
     fTest.setRead(Os::FileInterface::OP_OK);
 
     this->clearHistory();
     this->component.m_abort.store(true);
-    this->component.readFile(buf, size, f, fnameChar);
+    rStat = this->component.readFile(buf, size, f, fnameChar);
+    ASSERT_EQ(FileWorkerReadStatus::FW_READ_ABORT, rStat);
     ASSERT_EVENTS_ReadAborted_SIZE(1);
     this->component.m_abort.store(false);
 
@@ -86,6 +88,45 @@ void FileWorkerTester ::testReadErr() {
     ASSERT_from_readDoneOut_SIZE(1);
     ASSERT_from_readDoneOut(0, FileWorkerStatus::FW_STATUS_FAILED_CRC, 0);
     fTest.setOpen(Os::FileInterface::OP_OK);
+}
+
+// Regression test for nasa/fprime#5397: the status reported after a read must
+// reflect the actual read outcome, not unconditionally FW_STATUS_DONE_READ.
+void FileWorkerTester ::testReadStatusPropagation() {
+    FileWorkerStatus wStat;
+    const char* fnameChar = "nominalread.bin";
+    FwSizeType size = 1024 * 100;
+    U8 data[size];
+    Fw::Buffer buf(data, size);
+
+    fTest.setOpen(Os::FileInterface::OP_OK);
+    fTest.setSize(Os::FileInterface::OP_OK, 8247);
+    fTest.setWrite(Os::FileInterface::OP_OK);
+
+    // Nominal: a successful read still reports FW_STATUS_DONE_READ
+    this->clearHistory();
+    fTest.setRead(Os::FileInterface::OP_OK);
+    wStat = this->component.readBufferFromFile(buf, fnameChar);
+    ASSERT_EQ(FileWorkerStatus::FW_STATUS_DONE_READ, wStat);
+    ASSERT_EVENTS_ReadCompleted_SIZE(1);
+
+    // Read error must be reported as FW_STATUS_FAILED_TO_READ
+    this->clearHistory();
+    fTest.setRead(Os::FileInterface::INVALID_MODE);
+    wStat = this->component.readBufferFromFile(buf, fnameChar);
+    ASSERT_EQ(FileWorkerStatus::FW_STATUS_FAILED_TO_READ, wStat);
+    ASSERT_EVENTS_ReadError_SIZE(1);
+    ASSERT_EVENTS_ReadCompleted_SIZE(0);
+    fTest.setRead(Os::FileInterface::OP_OK);
+
+    // An aborted read must be reported as FW_STATUS_CANCELLED_READ
+    this->clearHistory();
+    this->component.m_abort.store(true);
+    wStat = this->component.readBufferFromFile(buf, fnameChar);
+    ASSERT_EQ(FileWorkerStatus::FW_STATUS_CANCELLED_READ, wStat);
+    ASSERT_EVENTS_ReadAborted_SIZE(1);
+    ASSERT_EVENTS_ReadCompleted_SIZE(0);
+    this->component.m_abort.store(false);
 }
 
 void FileWorkerTester ::testVerifyErr() {

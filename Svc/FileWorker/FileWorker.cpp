@@ -207,15 +207,30 @@ Svc ::FileWorkerStatus FileWorker ::readBufferFromFile(Fw::Buffer& buffer, const
 
     // Read file
     this->log_ACTIVITY_LO_ReadBegin(readSize, fileNameStr);
-    this->readFile(buffer, readSize, file, fileNameStr);
-
-    this->log_ACTIVITY_LO_ReadCompleted(readSize, fileNameStr);
+    FileWorkerReadStatus readStat = this->readFile(buffer, readSize, file, fileNameStr);
     file.close();
 
-    return FileWorkerStatus::FW_STATUS_DONE_READ;
+    // Map the read outcome to the status reported on readDoneOut
+    switch (readStat) {
+        case FW_READ_DONE:
+            this->log_ACTIVITY_LO_ReadCompleted(readSize, fileNameStr);
+            return FileWorkerStatus::FW_STATUS_DONE_READ;
+
+        case FW_READ_ABORT:
+            return FileWorkerStatus::FW_STATUS_CANCELLED_READ;
+
+        case FW_READ_ERROR:
+        case FW_READ_TIMEOUT:
+        case FW_READ_UNKNOWN:
+        default:
+            return FileWorkerStatus::FW_STATUS_FAILED_TO_READ;
+    }
 }
 
-void FileWorker ::readFile(Fw::Buffer& buffer, FwSizeType size, Os::File& file, const Fw::LogStringArg& fileNameStr) {
+Svc ::FileWorkerReadStatus FileWorker ::readFile(Fw::Buffer& buffer,
+                                                 FwSizeType size,
+                                                 Os::File& file,
+                                                 const Fw::LogStringArg& fileNameStr) {
     FW_ASSERT(buffer.getData() != nullptr);
     FW_ASSERT(size > 0);
     FW_ASSERT(fileNameStr != nullptr);
@@ -225,7 +240,7 @@ void FileWorker ::readFile(Fw::Buffer& buffer, FwSizeType size, Os::File& file, 
     U64 timeout = 0;
 
     if (!file.isOpen()) {
-        return;
+        return FileWorkerReadStatus::FW_READ_ERROR;
     }
 
     FileWorkerReadStatus readStat = this->readFileBytes(buffer, size, file, bytesRead);
@@ -260,7 +275,7 @@ void FileWorker ::readFile(Fw::Buffer& buffer, FwSizeType size, Os::File& file, 
             break;
     }
 
-    return;
+    return readStat;
 }
 
 Svc ::FileWorkerReadStatus FileWorker ::readFileBytes(Fw::Buffer& buffer,

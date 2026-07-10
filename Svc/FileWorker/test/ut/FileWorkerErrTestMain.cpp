@@ -11,6 +11,11 @@ TEST(Nominal, testReadErr) {
     tester.testReadErr();
 }
 
+TEST(Nominal, testReadStatusPropagation) {
+    Svc::FileWorkerTester tester;
+    tester.testReadStatusPropagation();
+}
+
 TEST(Nominal, testVerifyErr) {
     Svc::FileWorkerTester tester;
     tester.testVerifyErr();

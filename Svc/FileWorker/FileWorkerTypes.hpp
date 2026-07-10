@@ -28,7 +28,11 @@ typedef enum {
     FW_STATUS_START_READ,
     FW_STATUS_DONE_READ,
     FW_STATUS_DONE,
-    FW_STATUS_INVALID_INPUT
+    FW_STATUS_INVALID_INPUT,
+    // Appended (not inserted next to FW_STATUS_CANCELLED_WRITE) to preserve
+    // the numeric values of existing statuses, which cross the SignalDone
+    // port as a U32.
+    FW_STATUS_CANCELLED_READ
 } FileWorkerStatus;
 
 typedef enum { FW_READ_DONE = 0, FW_READ_ERROR, FW_READ_ABORT, FW_READ_TIMEOUT, FW_READ_UNKNOWN } FileWorkerReadStatus;
