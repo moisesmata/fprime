@@ -65,4 +65,4 @@ jobs:
         with:
           deployment-name: ledblinker
           platform: linux-remote
-          fsw-ip: "192.168.10.2"
+          ssh-target: "isolated-pi"
